@@ -63,7 +63,12 @@ db.sqlite3-journal
 
 # Flask stuff:
 instance/
+.env
+.env.*
+.envrc
 .webassets-cache
+static/
+uploads/
 
 # Scrapy stuff:
 .scrapy
@@ -98,7 +103,7 @@ ipython_config.py
 __pypackages__/
 
 # Celery stuff
-celerybeat-schedule
+celerybeat-schedule*
 celerybeat.pid
 
 # SageMath parsed files
@@ -136,3 +141,13 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# Ignore tests.py
+tests.py
+
+# Ignore generatepassword.py
+generatepassword.py
+
+# Other temporary files
+*.tmp
+*.bak

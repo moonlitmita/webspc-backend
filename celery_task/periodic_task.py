@@ -3,7 +3,7 @@
 #Distributed under MIT license.
 #See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
-from datetime import datetime
+import datetime
 from celery import shared_task
 from flask import current_app
 import json
@@ -20,7 +20,7 @@ def fetch_data_from_third_party(dict_filters, project_id, sample_size):
         local_session = current_app.extensions['sqlalchemy']['local_session']
         data_info = local_session.query(Data).order_by(desc(Data.add_date)).first()
         if data_info is None or data_info.add_date is None:
-            query_start_time = datetime.now()
+            query_start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
         else:
             query_start_time = data_info.add_date
         query = third_party_session1.query(FirstExternalModel)

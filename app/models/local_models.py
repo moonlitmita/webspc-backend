@@ -97,7 +97,7 @@ class Project(BaseModel):
     selectedChecks = Column(String(80), default='')
     dataCollectionType = Column(String(80), nullable=False)
     process_id = Column(Integer, ForeignKey("process.id"))
-    datas = relationship("Data", backref="project")
+    datas = relationship("Data", backref="project", cascade="all, delete-orphan")
     def __init__(self, product, project, spcType1, spcType2, spcType3, sampleSize, USL, LSL, process_id, selectedChecks, dataCollectionType):
         self.product = product
         self.project = project
@@ -135,7 +135,7 @@ class Project(BaseModel):
 class Data(BaseModel):
     __tablename__ = "data"
     id = Column(Integer, primary_key=True)
-    project_id = Column(Integer, ForeignKey("project.id"))
+    project_id = Column(Integer, ForeignKey("project.id", ondelete="CASCADE"), nullable=False)
     samples = Column(String(128), nullable=False)
 
     def __init__(self, project_id, samples):

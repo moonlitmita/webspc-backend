@@ -57,7 +57,15 @@ $env:FLASK_APP = "RealProject"
 
 $env:FLASK_ENV = "development" 
 
-# 4. Technical Support
+# 4. Live Demo
+
+URL: https://webspc.top
+
+Username: admin
+
+Password: Contact the author
+
+# 5. Technical Support
 
 Author: valleyfo
 
@@ -66,3 +74,10 @@ Email: wynmamtf@163.com
 QQ: 271989251
 
 Wexin: valleyfo
+
+Note: Technical support includes but is not limited to:
+Custom business development
+Project deployment
+Software usage explanations
+Code explanations
+SPC theory training

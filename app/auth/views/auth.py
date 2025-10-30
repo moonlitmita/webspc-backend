@@ -50,6 +50,20 @@ class GetMenu(MethodView):
             'label': '项目管理',
             'icon': 'Histogram',
             'url': 'project/Project'
+        },
+        {
+            'path': '/llm',
+            'name': 'llm',
+            'label': 'LLM管理',
+            'icon': 'Cpu',
+            'url': 'llm/ModelSelector'
+        },
+        {
+            'path': '/mcp',
+            'name': 'mcp',
+            'label': 'MCP_Config',
+            'icon': 'Tools',
+            'url': 'mcp/MCPConfig'
         }
         ]
     __menu_part = [
@@ -73,7 +87,21 @@ class GetMenu(MethodView):
             'label': '项目管理',
             'icon': 'Histogram',
             'url': 'project/Project'
-        }  
+        },
+        {
+            'path': '/llm',
+            'name': 'llm',
+            'label': 'LLM管理',
+            'icon': 'Cpu',
+            'url': 'llm/ModelSelector'
+        },
+        {
+            'path': '/mcp',
+            'name': 'mcp',
+            'label': 'MCP_Config',
+            'icon': 'Tools',
+            'url': 'mcp/MCPConfig'
+        }
         ]
     @verify_token
     def get(self, userid):
@@ -148,12 +176,12 @@ class UserView(MethodView):
                 Department.department.ilike('%{}%'.format(searchInfo)),
                 User.username.ilike('%{}%'.format(searchInfo))
             ))
-            users = results.order_by(User.id).slice(offset, offset + page_size)
+            users_pagination = results.order_by(User.id).slice(offset, offset + page_size)
             total_count = results.count()
         else:
-            users = dbsession.query(User).order_by(User.id).slice(offset, offset + page_size).all()
+            users_pagination = dbsession.query(User).order_by(User.id).slice(offset, offset + page_size).all()
             total_count = dbsession.query(User).count()
-        user_dicts = [user.to_dict() for user in users]
+        user_dicts = [user.to_dict() for user in users_pagination]
         users_data = {
             'code': 200,
             'data': {

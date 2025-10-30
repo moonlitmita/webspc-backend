@@ -8,7 +8,7 @@ import datetime
 from flask import jsonify
 
 class MyJwt:
-    def __init__(self,secret='1234'):
+    def __init__(self,secret='webspc_123'):
         self.secret = secret
     def encode_time(self,userinfo,lifetime=24):
         payload = {

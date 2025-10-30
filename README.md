@@ -66,7 +66,13 @@ $env:FLASK_ENV = "development"
 ## 2.7 执行以下命令启动程序
 python manage.py
 
-# 3.技术支持：
+# 3.项目演示地址：https://webspc.top
+
+用户名：admin
+
+登录密码：联系作者获取
+
+# 4.技术支持：
 
 作者：valleyfo
 
@@ -75,5 +81,10 @@ Email: wynmamtf@163.com
 QQ: 271989251
 
 Weixin: valleyfo
+
+备注：技术支持包括但不限于
+    定制业务开发,
+    项目部署,
+    程序使用讲解，代码讲解，SPC理论培训。
 
 

@@ -4,11 +4,14 @@
 #See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 import jwt 
+import os
 import datetime
 from flask import jsonify
 
+jwt_secret = os.getenv('JWT_SECRET', 'webspc_123')
+
 class MyJwt:
-    def __init__(self,secret='webspc_123'):
+    def __init__(self,secret=jwt_secret):
         self.secret = secret
     def encode_time(self,userinfo,lifetime=24):
         payload = {

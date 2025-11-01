@@ -37,6 +37,18 @@
 
 将manage.py中的最后一行注释解锁(flask_app.run)，该行代码的上面一行代码注释。
 
+## 3.环境配置
+
+需要配置以下环境变量：
+
+- `FLASK_ENV`: 运行环境（生产环境为production）
+- `FLASK_APP`: FLASK 入口文件
+- `SQLALCHEMY_DATABASE_URI`: 项目数据库的URI地址
+- `FIRST_DATABASE_URI`: 第一个外部数据库的URI地址
+- `JWT_SECRET`: jwt令牌密码，用于用户身份认证
+- `CELERY_BROKER_URL`: Celery 任务栈URL
+- `CELERY_RESULT_BACKEND`: Celery 存储结果的URL
+
 # 2.开发环境配置：
 
 ## 2.1 克隆项目到指定文件夹

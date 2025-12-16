@@ -3,9 +3,7 @@
 #Distributed under MIT license.
 #See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
-from datetime import timedelta
 import os
-import json
 
 BROKER_URL = 'redis://127.0.0.1:6379/0'
 RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
@@ -16,8 +14,9 @@ RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', RESULT_BACKEND)
 task_module = [
     'celery_task.periodic_task'
 ]
-dict_filters = {'shift': 'a'}
-dict_filters_json = json.dumps(dict_filters)
+# 从数据库库中加载周期性任务，以下静态任务暂时不需要了
+# dict_filters = {'shift': 'a'}
+# dict_filters_json = json.dumps(dict_filters)
 CELERY_CONFIG = {
     "broker_url": BROKER_URL,
     "result_backend": RESULT_BACKEND,
@@ -27,11 +26,11 @@ CELERY_CONFIG = {
     "enable_utc": False,
     "result_expires": 1*60*60,
     "broker_connection_retry_on_startup": True,
-    "beat_schedule": {
-    'fetch-every-nine-seconds': {
-        'task': 'celery_task.periodic_task.fetch_data_from_third_party',
-        'schedule': timedelta(seconds=9),
-        'args': (dict_filters_json, 5, 3),
-        }
-    }
+    # "beat_schedule": {
+    # 'fetch-every-nine-seconds': {
+    #     'task': 'celery_task.periodic_task.fetch_data_from_third_party',
+    #     'schedule': timedelta(seconds=9),
+    #     'args': (dict_filters_json, 5, 3),
+    #     }
+    # }
 }

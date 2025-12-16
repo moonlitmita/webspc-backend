@@ -7,18 +7,31 @@ import datetime
 from celery import shared_task
 from flask import current_app
 import json
-import time
 from sqlalchemy import desc
 from app.models.external_models import FirstExternalModel
-from app.models.local_models import Data
+from app.models.local_models import Project, Data
 
 @shared_task(ignore_result=False)
-def fetch_data_from_third_party(dict_filters, project_id, sample_size):
+def fetch_data_from_third_party(target_field, dict_filters, project_id):
     with current_app.app_context():
-        filters = json.loads(dict_filters)
+        # 检查dict_filters是否已经是字典，否则解析为JSON
+        if isinstance(dict_filters, str):
+            filters = json.loads(dict_filters)
+        else:
+            filters = dict_filters
         third_party_session1 = current_app.extensions['sqlalchemy']['third_party_session1']
         local_session = current_app.extensions['sqlalchemy']['local_session']
         data_info = local_session.query(Data).order_by(desc(Data.add_date)).first()
+        # 验证project_id是否存在
+        project = local_session.query(Project).filter(Project.id == project_id).first()
+        sample_size = project.sampleSize if project else None
+        if not project:
+            return {
+                'code': 404,
+                'data': {
+                    'message': f'Project with ID {project_id} does not exist!'
+                }
+            }
         if data_info is None or data_info.add_date is None:
             query_start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
         else:
@@ -29,7 +42,7 @@ def fetch_data_from_third_party(dict_filters, project_id, sample_size):
         res = query.filter(FirstExternalModel.add_date > query_start_time).limit(sample_size).all()
         if len(res) == sample_size:
             dicts_all = [data.to_dict() for data in res]
-            data_list = [round(item['resistance'], 2) for item in dicts_all]
+            data_list = [round(item[target_field], 2) for item in dicts_all]
             data_str = ', '.join(map(str, data_list))
             new_item = Data(project_id = project_id, samples = data_str)
             local_session.add(new_item)

@@ -52,6 +52,13 @@ class GetMenu(MethodView):
             'url': 'project/Project'
         },
         {
+            'path': '/tasks',
+            'name': 'tasks',
+            'label': '动态任务管理',
+            'icon': 'Clock',
+            'url': 'tasks/TaskManagement'
+        },
+        {
             'path': '/llm',
             'name': 'llm',
             'label': 'LLM管理',
@@ -87,6 +94,13 @@ class GetMenu(MethodView):
             'label': '项目管理',
             'icon': 'Histogram',
             'url': 'project/Project'
+        },
+        {
+            'path': '/tasks',
+            'name': 'tasks',
+            'label': '动态任务管理',
+            'icon': 'Clock',
+            'url': 'tasks/TaskManagement'
         },
         {
             'path': '/llm',

@@ -148,6 +148,12 @@ tests.py
 # Ignore generatepassword.py
 generatepassword.py
 
+# Ignore QWEN.md
+QWEN.md
+
+# Ignore dataproduce.py
+dataproduce.py
+
 # Other temporary files
 *.tmp
 *.bak

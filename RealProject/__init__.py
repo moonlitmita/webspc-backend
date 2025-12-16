@@ -82,6 +82,12 @@ def create_app(test_config=None) -> Flask:
     app.register_blueprint(spc.bp)
     from app.auth import views as auth
     app.register_blueprint(auth.bp)
-    from app.models.local_models import User, Department, Process, Project, Data
+    # try:
+    # from app.task import bp as task_bp
+    from app.task.views.task_views import bp as task_bp
+    app.register_blueprint(task_bp)
+    # except ImportError:
+        # pass  # Task module may not exist during initialization
+    from app.models.local_models import User, Department, Process, Project, Data, PeriodicTask
     from app.models.external_models import FirstExternalModel
     return app

@@ -4,7 +4,7 @@
 #See file LICENSE for detail or copy at https://opensource.org/licenses/MIT
 
 from datetime import datetime
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, MetaData, String
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, MetaData, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -98,6 +98,7 @@ class Project(BaseModel):
     dataCollectionType = Column(String(80), nullable=False)
     process_id = Column(Integer, ForeignKey("process.id"))
     datas = relationship("Data", backref="project", cascade="all, delete-orphan")
+    task = relationship("PeriodicTask", back_populates="project", uselist=False, cascade="all, delete-orphan")
     def __init__(self, product, project, spcType1, spcType2, spcType3, sampleSize, USL, LSL, process_id, selectedChecks, dataCollectionType):
         self.product = product
         self.project = project
@@ -149,4 +150,38 @@ class Data(BaseModel):
             "samples": list(map(float, self.samples.split(','))),
             "add_date": self.add_date.strftime("%d %b %Y %H:%M:%S"),
             "upd_date": self.upd_date.strftime("%d %b %Y %H:%M:%S")
+        }
+    
+class PeriodicTask(BaseModel):
+    """
+    周期性任务配置模型
+    """
+    __tablename__ = 'periodic_tasks'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(255), unique=True, nullable=False, comment='任务名称')
+    task = Column(String(255), nullable=False, comment='任务函数路径')
+    enabled = Column(Boolean, default=True, comment='是否启用')
+    schedule_type = Column(String(50), nullable=False, comment='调度类型 (interval/crontab)')
+    schedule_value = Column(Text, nullable=False, comment='调度参数 (JSON格式)')
+    args = Column(Text, comment='任务参数 (JSON格式)')
+    kwargs = Column(Text, comment='任务关键字参数 (JSON格式)')
+    project_id = Column(Integer,
+                        ForeignKey("project.id", ondelete="CASCADE"),
+                        nullable=False)
+    project = relationship("Project", back_populates="task")
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'project_id': self.project_id,
+            'task': self.task,
+            'enabled': self.enabled,
+            'schedule_type': self.schedule_type,
+            'schedule_value': self.schedule_value,
+            'args': self.args,
+            'kwargs': self.kwargs,
+            'add_date': self.add_date.isoformat() if self.add_date else None,
+            'upd_date': self.upd_date.isoformat() if self.upd_date else None
         }

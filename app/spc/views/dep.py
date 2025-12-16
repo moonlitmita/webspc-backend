@@ -6,7 +6,7 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask.views import MethodView
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from decorators import verify_token
 from app.models import User, Department, Process, Project, Data, FirstExternalModel
 import pandas as pd
@@ -365,29 +365,41 @@ class HomeView(MethodView):
                 }
             })
         else:
-            query = dbsession.query(Data).filter_by(project_id=project_id)
             start_date = datetime.fromisoformat(start_date_str) if start_date_str else None
             end_date = datetime.fromisoformat(end_date_str) if end_date_str else None
+            # 0. 最多一个日期条件
+            date_condition = None
             if start_date and end_date:
-                results = query.filter(Data.add_date.between(start_date, end_date)).order_by(Data.id).limit(150)
-                data_all = results.all()
-                data_pagination = results.slice(offset, offset + page_size)
-                total_count = results.count()
+                date_condition = Data.add_date.between(start_date, end_date)
             elif start_date:
-                results = query.filter(Data.add_date>=start_date).limit(150)
-                data_all = results.all()
-                data_pagination = results.slice(offset, offset + page_size)
-                total_count = results.count()
+                date_condition = Data.add_date >= start_date
             elif end_date:
-                results = query.filter(Data.add_date <= end_date).limit(150)
-                data_all = results.all()
-                data_pagination = results.slice(offset, offset + page_size)
-                total_count = results.count()
-            else:
-                data_all = query.order_by(Data.add_date.desc()).limit(150).all()
-                data_all = list(reversed(data_all))
-                data_pagination = query.order_by(Data.id).limit(150).slice(offset, offset + page_size)
-                total_count = query.count()
+                date_condition = Data.add_date <= end_date
+
+            # 1. data_all 子查询
+            sub_base = (select(Data.id)
+                        .where(Data.project_id == project_id)
+                        .order_by(Data.id.desc())
+                        .limit(1000))
+            if date_condition is not None:
+                sub_base = sub_base.where(date_condition)
+
+            sub = sub_base.subquery()
+            stmt_all = (select(Data)
+                        .join(sub, Data.id == sub.c.id)
+                        .order_by(Data.id.asc()))
+            data_all = dbsession.execute(stmt_all).scalars().all()
+
+            # 2. data_pagination base_query
+            base_query = dbsession.query(Data).filter_by(project_id=project_id)
+            if date_condition is not None:
+                base_query = base_query.filter(date_condition)
+
+            total_count = base_query.count()
+            data_pagination = (base_query.order_by(Data.id)
+                            .offset(offset)
+                            .limit(page_size)
+                            .all())
             dicts_pagination = [data.to_dict() for data in data_pagination]
             dicts_all = [data.to_dict() for data in data_all]
             dicts_all_averages = [np.mean(d['samples']) for d in dicts_all]
@@ -440,10 +452,10 @@ class HomeView(MethodView):
                             dbsession.add(new_item)
                         dbsession.commit()
                         return jsonify({
-                        'code': 200,
-                        'data': {
-                            'message': 'File uploaded and processed successfully! 文件上传并且处理成功！'
-                        }
+                            'code': 200,
+                            'data': {
+                                'message': 'File uploaded and processed successfully! 文件上传并且处理成功！'
+                            }
                         })
                     except Exception as e:
                         return jsonify({
@@ -451,7 +463,7 @@ class HomeView(MethodView):
                             'data': {
                                 'error': str(e)
                             }
-                    })
+                        })
                 else:
                     return jsonify({
                         'code': 400,

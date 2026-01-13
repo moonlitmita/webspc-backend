@@ -8,7 +8,7 @@ from flask import Blueprint, request, jsonify
 from flask.views import MethodView
 from sqlalchemy import or_, select
 from decorators import verify_token
-from app.models import User, Department, Process, Project, Data, FirstExternalModel
+from app.models import User, Department, Process, Project, Data
 import pandas as pd
 import numpy as np
 from mystat import f_oneway_variance, normality_test
@@ -550,20 +550,6 @@ class HomeView(MethodView):
             }
             return jsonify(delete_info)
 bp.add_url_rule("/data", view_func=HomeView.as_view("home_view"))
-class ImportData(MethodView):
-    def get(self):
-        db_session1 = request._db_session1
-        res = db_session1.query(FirstExternalModel).all()
-        dicts_all = [data.to_dict() for data in res]
-        data_all = {
-            'code': 200,
-            'data': {
-                'import_data': dicts_all,
-                'message': '外部数据获取成功！'
-            }
-        }
-        return jsonify(data_all)
-bp.add_url_rule("/importdata", view_func=ImportData.as_view("import_data"))
     
 
 

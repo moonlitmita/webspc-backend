@@ -8,8 +8,26 @@ from celery.utils.log import get_logger
 import json
 from datetime import timedelta, datetime
 from time import time
+from sqlalchemy.orm import sessionmaker
 
 logger = get_logger(__name__)
+
+from contextlib import contextmanager
+
+@contextmanager
+def beat_session_scope(app):
+    """Beat 专用短 Session"""
+    engine = app.extensions['sqlalchemy']['local_engine']
+    Session = sessionmaker(bind=engine, expire_on_commit=False)
+    sess = Session()
+    try:
+        yield sess
+        sess.commit()
+    except Exception:
+        sess.rollback()
+        raise
+    finally:
+        sess.close() 
 
 class DatabaseScheduler(Scheduler):
     def __init__(self, *args, **kwargs):
@@ -30,15 +48,51 @@ class DatabaseScheduler(Scheduler):
                 app = self.app
                 self._update_schedule_internal(app)
             else:
-                # 创建临时应用上下文
-                from RealProject import create_app
-                temp_app = create_app()
-                with temp_app.app_context():
-                    self._update_schedule_internal(temp_app)
+                # 尝试通过Celery app获取Flask app
+                try:
+                    # Import here to avoid circular imports
+                    from celery import current_app as current_celery_app
+
+                    # Check if the current Celery app has the Flask app attached
+                    if hasattr(current_celery_app, 'flask_app'):
+                        app = current_celery_app.flask_app
+                        self._update_schedule_internal(app)
+                    else:
+                        # Fallback to creating a temporary app
+                        self._create_temp_app_and_update()
+                except:
+                    # Fallback to creating a temporary app
+                    self._create_temp_app_and_update()
         except Exception as e:
             logger.error(f"更新调度配置失败: {str(e)}")
             import traceback
             traceback.print_exc()
+
+    def _create_temp_app_and_update(self):
+        """创建临时应用并更新调度配置"""
+        from RealProject import create_app
+        temp_app = create_app()
+        try:
+            with temp_app.app_context():
+                self._update_schedule_internal(temp_app)
+        finally:
+            # 确保临时应用的连接池被清理
+            if 'sqlalchemy' in temp_app.extensions:
+                local_session = temp_app.extensions['sqlalchemy'].get('local_session')
+                third_party_session = temp_app.extensions['sqlalchemy'].get('third_party_session1')
+                local_engine = temp_app.extensions['sqlalchemy'].get('local_engine')
+                third_party_engine = temp_app.extensions['sqlalchemy'].get('third_party_engine1')
+
+                if local_session:
+                    local_session.remove()
+                if third_party_session:
+                    third_party_session.remove()
+
+                # Dispose of the engines to close all connections in the pool
+                if local_engine:
+                    local_engine.dispose()
+                if third_party_engine:
+                    third_party_engine.dispose()
 
     def _update_schedule_internal(self, app):
         """内部更新调度配置方法"""
@@ -49,17 +103,16 @@ class DatabaseScheduler(Scheduler):
             if 'sqlalchemy' not in app.extensions:
                 logger.error("SQLAlchemy extension not found in app extensions")
                 return
+            # 用短session查表
+            with beat_session_scope(app) as session:
+                # 查询所有启用的任务 - 使用autocommit模式避免不必要的事务
+                db_tasks = session.query(PeriodicTask).filter(PeriodicTask.enabled == True).all()
 
-            session = app.extensions['sqlalchemy']['local_session']
-
-            # 查询所有启用的任务 - 使用autocommit模式避免不必要的事务
-            db_tasks = session.query(PeriodicTask).filter(PeriodicTask.enabled == True).all()
-
-            new_schedule = {}
-            for db_task in db_tasks:
-                task_schedule = self._get_schedule_from_db_task(db_task)
-                if task_schedule:
-                    new_schedule[db_task.name] = task_schedule
+                new_schedule = {}
+                for db_task in db_tasks:
+                    task_schedule = self._get_schedule_from_db_task(db_task)
+                    if task_schedule:
+                        new_schedule[db_task.name] = task_schedule
 
             self._schedule = new_schedule
             self._last_updated = datetime.now()
@@ -127,7 +180,12 @@ class DatabaseScheduler(Scheduler):
         # 检查是否需要更新调度（例如，每分钟检查一次）
         now = datetime.now()
         if (now - self._last_updated).seconds > 30:  # 每30秒检查更新
-            self.update_from_db()
+            try:
+                self.update_from_db()
+            except Exception as e:
+                logger.error(f"Database scheduler update failed: {str(e)}")
+                import traceback
+                traceback.print_exc()
         return super().tick(*args, **kwargs)
 
     @property

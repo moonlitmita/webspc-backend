@@ -1,11 +1,24 @@
 # webspc-backend
 
 # 项目介绍
-    WebSPC是SPC(统计过程控制)的web实现，采用前后端分离的方式，免费开源，此为该项目的后端部分。
 
-    前端代码地址：https://gitee.com/valleyfo/webspc-frontend
+## WebSPC把传统SPC从“事后看图”升级成“7×24 的 AI 质量副驾驶”——会自己采数、自己判异、自己找根因，还能把结论 @ 你。
 
-    后端代码地址：https://gitee.com/valleyfo/webspc-backend
+## 特色功能：
+
+### 1. 集成了LLM对话引擎及MCP工具链,不但可以让LLM对SPC数据进行分析，还可以调用MCP工具链执行特定任务。
+
+### 2. 支持动态添加周期性任务，对第三方数据库进行实时数据采集。
+
+### 3.LLM实时流式监控，异常一出现，立即执行根因分析，并将处理建议自动推到飞书群，@相关责任人，大大提高异常响应时间。
+
+# 开源地址：
+   
+1. 前端业务代码地址：https://gitee.com/valleyfo/webspc-frontend
+
+2. 常规后端业务代码地址：https://gitee.com/valleyfo/webspc-backend
+
+3. AI后端业务代码地址:https://gitee.com/valleyfo/webspc-ai
 
 # 项目架构
 
@@ -80,9 +93,7 @@ python manage.py
 
 # 3.项目演示地址：https://webspc.top
 
-用户名：admin
-
-登录密码：联系作者获取
+用户名，密码：联系作者获取
 
 # 4.技术服务：
 
@@ -97,6 +108,6 @@ Weixin: valleyfo
 备注：技术服务包括但不限于
     定制业务开发,
     项目部署,
-    程序使用讲解，代码讲解，SPC理论培训。
+    应用讲解等。
 
 

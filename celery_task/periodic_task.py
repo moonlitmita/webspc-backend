@@ -10,6 +10,20 @@ import json
 from sqlalchemy import desc
 from app.models.external_models import FirstExternalModel
 from app.models.local_models import Project, Data
+from contextlib import contextmanager
+from celery.utils.log import get_logger
+
+logger = get_logger(__name__)
+
+@contextmanager
+def scoped_sessions():
+    """确保任务结束后把两个 scoped_session 都归还"""
+    try:
+        yield (current_app.extensions['sqlalchemy']['third_party_session1'],
+               current_app.extensions['sqlalchemy']['local_session'])
+    finally:
+        current_app.extensions['sqlalchemy']['third_party_session1'].remove()
+        current_app.extensions['sqlalchemy']['local_session'].remove()
 
 @shared_task(ignore_result=False)
 def fetch_data_from_third_party(target_field, dict_filters, project_id):
@@ -19,41 +33,48 @@ def fetch_data_from_third_party(target_field, dict_filters, project_id):
             filters = json.loads(dict_filters)
         else:
             filters = dict_filters
-        third_party_session1 = current_app.extensions['sqlalchemy']['third_party_session1']
-        local_session = current_app.extensions['sqlalchemy']['local_session']
-        data_info = local_session.query(Data).order_by(desc(Data.add_date)).first()
-        # 验证project_id是否存在
-        project = local_session.query(Project).filter(Project.id == project_id).first()
-        sample_size = project.sampleSize if project else None
-        if not project:
-            return {
-                'code': 404,
-                'data': {
-                    'message': f'Project with ID {project_id} does not exist!'
-                }
-            }
-        if data_info is None or data_info.add_date is None:
-            query_start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
-        else:
-            query_start_time = data_info.add_date
-        query = third_party_session1.query(FirstExternalModel)
-        for field, value in filters.items():
-            query = query.filter(getattr(FirstExternalModel, field) == value)
-        res = query.filter(FirstExternalModel.add_date > query_start_time).limit(sample_size).all()
-        if len(res) == sample_size:
-            dicts_all = [data.to_dict() for data in res]
-            data_list = [round(item[target_field], 2) for item in dicts_all]
-            data_str = ', '.join(map(str, data_list))
-            new_item = Data(project_id = project_id, samples = data_str)
-            local_session.add(new_item)
-            local_session.commit()
-            data_all = {
-                'code': 200,
-                'data': {
-                    'import_data': dicts_all,
-                    'message': 'data get successfully!'
-                }
-            }
-            return data_all
-        else:
-            return None
+
+        try:
+            with scoped_sessions() as (third_party_session1, local_session):
+                data_info = local_session.query(Data).order_by(desc(Data.add_date)).first()
+                # 验证project_id是否存在
+                project = local_session.query(Project).filter(Project.id == project_id).first()
+                sample_size = project.sampleSize if project else None
+                if not project:
+                    return {
+                        'code': 404,
+                        'data': {
+                            'message': f'Project with ID {project_id} does not exist!'
+                        }
+                    }
+                if data_info is None or data_info.add_date is None:
+                    query_start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
+                else:
+                    query_start_time = data_info.add_date
+                query = third_party_session1.query(FirstExternalModel)
+                for field, value in filters.items():
+                    query = query.filter(getattr(FirstExternalModel, field) == value)
+                res = query.filter(FirstExternalModel.add_date > query_start_time).limit(sample_size).all()
+                if len(res) == sample_size:
+                    dicts_all = [data.to_dict() for data in res]
+                    data_list = [round(item[target_field], 2) for item in dicts_all]
+                    data_str = ', '.join(map(str, data_list))
+                    new_item = Data(project_id = project_id, samples = data_str)
+                    local_session.add(new_item)
+                    local_session.commit()
+                    data_all = {
+                        'code': 200,
+                        'data': {
+                            'import_data': dicts_all,
+                            'message': 'data get successfully!'
+                        }
+                    }
+                    return data_all
+                else:
+                    return None
+        except Exception as e:
+            # 确保在异常情况下也清理session
+            current_app.extensions['sqlalchemy']['third_party_session1'].remove()
+            current_app.extensions['sqlalchemy']['local_session'].remove()
+            logger.error(f"Error in fetch_data_from_third_party: {str(e)}")
+            raise

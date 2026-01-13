@@ -12,6 +12,7 @@ from flask_cors import CORS
 from app.models.local_models import metadata_local
 from app.models.external_models import metadata_external1
 from celery_task.celery import make_celery
+import os
 
 def create_app(test_config=None) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
@@ -33,7 +34,7 @@ def create_app(test_config=None) -> Flask:
                            pool_recycle=app.config['SQLALCHEMY_POOL_RECYCLE'],
                            pool_pre_ping=True,
                            pool_use_lifo=True,
-                           echo=True)
+                           echo=False)
     metadata_local.bind = engine
     engine1 = create_engine(app.config['FIRST_DATABASE_URI'],
                             poolclass=QueuePool,
@@ -43,13 +44,28 @@ def create_app(test_config=None) -> Flask:
                             pool_recycle=app.config['SQLALCHEMY_POOL_RECYCLE'],
                             pool_pre_ping=True,
                             pool_use_lifo=True,
-                            echo=True)
+                            echo=False)
+    
+    # 连接泄漏测试
+    # def log_conn_event(name):
+    #     def logger(dbapi_conn, conn_record=None, conn_proxy=None):
+    #         print(f">>> {name}  conn_id={id(dbapi_conn)}  thread={threading.current_thread().name}  pid={os.getpid()}")
+    #     return logger
+
+    # 对两个引擎都监听
+    # event.listen(engine,  'checkout', log_conn_event('CHECKOUT-local'))
+    # event.listen(engine,  'checkin',  log_conn_event('CHECKIN-local'))
+    # event.listen(engine1, 'checkout', log_conn_event('CHECKOUT-external'))
+    # event.listen(engine1, 'checkin',  log_conn_event('CHECKIN-external'))
+
     metadata_external1.bind = engine1
     Session = scoped_session(sessionmaker(bind=engine))
     Session1 = scoped_session(sessionmaker(bind=engine1))
     app.extensions['sqlalchemy'] = {
         'local_session': Session,
-        'third_party_session1': Session1
+        'third_party_session1': Session1,
+        'local_engine': engine,
+        'third_party_engine1': engine1
     }
     @app.before_request
     def before_request():
@@ -82,12 +98,9 @@ def create_app(test_config=None) -> Flask:
     app.register_blueprint(spc.bp)
     from app.auth import views as auth
     app.register_blueprint(auth.bp)
-    # try:
-    # from app.task import bp as task_bp
+ 
     from app.task.views.task_views import bp as task_bp
     app.register_blueprint(task_bp)
-    # except ImportError:
-        # pass  # Task module may not exist during initialization
     from app.models.local_models import User, Department, Process, Project, Data, PeriodicTask
     from app.models.external_models import FirstExternalModel
     return app

@@ -8,10 +8,10 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 class Config:
-    SQLALCHEMY_POOL_SIZE = 100
-    SQLALCHEMY_MAX_OVERFLOW = 10
-    SQLALCHEMY_POOL_TIMEOUT = 60
-    SQLALCHEMY_POOL_RECYCLE = 3600
+    SQLALCHEMY_POOL_SIZE = 7
+    SQLALCHEMY_MAX_OVERFLOW = 0
+    SQLALCHEMY_POOL_TIMEOUT = 5
+    SQLALCHEMY_POOL_RECYCLE = 1800
     @staticmethod
     def get_db_uri(dbname):
         return f'mysql+pymysql://root:123456@localhost/{dbname}'

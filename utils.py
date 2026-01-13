@@ -13,9 +13,10 @@ jwt_secret = os.getenv('JWT_SECRET', 'webspc_123')
 class MyJwt:
     def __init__(self,secret=jwt_secret):
         self.secret = secret
-    def encode_time(self,userinfo,lifetime=24):
+    def encode_time(self,userinfo,lifetime=720):
+        now = datetime.datetime.now(datetime.timezone.utc)
         payload = {
-            'exp':(datetime.datetime.now()+datetime.timedelta(hours=lifetime)).timestamp(),
+            'exp':now + datetime.timedelta(minutes=lifetime),
             'data': userinfo
         }
         res = jwt.encode(payload,self.secret,algorithm='HS256')

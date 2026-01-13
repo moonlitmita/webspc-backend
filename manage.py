@@ -10,9 +10,11 @@ load_dotenv()
 
 flask_app = create_app()
 celery_app = flask_app.extensions["celery"]
+# Attach the Flask app to the Celery app so the scheduler can access it
+celery_app.flask_app = flask_app
 
 if __name__ == '__main__':
     # 开发状态
-    # flask_app.run(port=5000, debug=True)
+    flask_app.run(port=5000, debug=True)
     # 生产状态
-    flask_app.run(host='0.0.0.0', port=5000, debug=False)
+    # flask_app.run(host='0.0.0.0', port=5000, debug=False)

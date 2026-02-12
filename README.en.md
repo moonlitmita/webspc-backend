@@ -43,6 +43,8 @@ Language: Python
 
 - [02.WebSPC使用方法补充-数据自动采集](https://www.bilibili.com/video/BV1ANQbY9EpH?spm_id_from=333.788.recommend_more_video.1&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
+- [03.WebSPC使用方法-AI集成](https://www.bilibili.com/video/BV1KK6xB2Ecx/?vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+
 # 2.Project Deployment Video:
 
 - [01.WebSPC项目部署_01](https://www.bilibili.com/video/BV11RQAYWE82/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)

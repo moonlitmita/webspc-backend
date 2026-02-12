@@ -34,15 +34,17 @@
 
 # 1.使用方法视频：
 
-[01.WebSPC使用方法介绍](https://www.bilibili.com/video/BV1h1XRYLEUt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [01.WebSPC使用方法介绍](https://www.bilibili.com/video/BV1h1XRYLEUt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
-[02.WebSPC使用方法补充-数据自动采集](https://www.bilibili.com/video/BV1ANQbY9EpH?spm_id_from=333.788.recommend_more_video.1&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [02.WebSPC使用方法补充-数据自动采集](https://www.bilibili.com/video/BV1ANQbY9EpH?spm_id_from=333.788.recommend_more_video.1&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+
+- [03.WebSPC使用方法-AI集成](https://www.bilibili.com/video/BV1KK6xB2Ecx/?vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
 # 2.项目部署视频：
 
-[01.WebSPC项目部署_01](https://www.bilibili.com/video/BV11RQAYWE82/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [01.WebSPC项目部署_01](https://www.bilibili.com/video/BV11RQAYWE82/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
-[02.WebSPC项目部署_02](https://www.bilibili.com/video/BV1EmQwYgEJt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [02.WebSPC项目部署_02](https://www.bilibili.com/video/BV1EmQwYgEJt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
 补充：
 
@@ -97,7 +99,7 @@ python manage.py
 
 # 4.技术服务：
 
-作者：valleyfo
+作者：王宇
 
 Email: wynmamtf@163.com
 

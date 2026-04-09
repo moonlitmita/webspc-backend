@@ -7,6 +7,7 @@ from datetime import datetime
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, MetaData, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+import re
 
 metadata_local = MetaData()
 Base_local = declarative_base(metadata=metadata_local)
@@ -141,13 +142,65 @@ class Data(BaseModel):
 
     def __init__(self, project_id, samples):
         self.project_id = project_id
-        self.samples = samples
+        # 验证并清理 samples 数据
+        self.samples = self._validate_samples(samples)
 
-    def to_dict(self): 
+    def _validate_samples(self, samples):
+        """
+        验证 samples 数据，确保所有值都是有效的数字
+        如果任何值无效，则抛出异常拒绝整条数据
+        """
+        if not samples:
+            raise ValueError("samples 不能为空")
+        
+        samples_str = str(samples).strip()
+        if not samples_str:
+            raise ValueError("samples 不能为空字符串")
+        
+        valid_samples = []
+        raw_values = samples_str.split(',')
+        
+        for i, s in enumerate(raw_values):
+            s = s.strip()
+            # 不允许空字符串
+            if not s:
+                raise ValueError(
+                    f"samples 数据格式错误：第{i+1}个值为空。"
+                    f"原始数据: '{samples_str}'"
+                )
+            
+            # 必须是有效数字
+            try:
+                float_val = float(s)
+                valid_samples.append(str(float_val))  # 标准化为字符串
+            except ValueError:
+                raise ValueError(
+                    f"samples 数据格式错误：第{i+1}个值 '{s}' 不是有效数字。"
+                    f"原始数据: '{samples_str}'"
+                )
+        
+        if not valid_samples:
+            raise ValueError("samples 中没有有效的数字")
+        
+        return ','.join(valid_samples)
+
+    def to_dict(self):
+        # 处理 samples 字段，过滤空字符串和无效值
+        sample_list = []
+        if self.samples:
+            for s in self.samples.split(','):
+                s = s.strip()
+                if s:  # 跳过空字符串
+                    try:
+                        sample_list.append(float(s))
+                    except ValueError:
+                        # 如果无法转换为 float，跳过该值
+                        pass
+        
         return {
             "id": self.id,
             "project_id": self.project_id,
-            "samples": list(map(float, self.samples.split(','))),
+            "samples": sample_list,
             "add_date": self.add_date.strftime("%d %b %Y %H:%M:%S"),
             "upd_date": self.upd_date.strftime("%d %b %Y %H:%M:%S")
         }

@@ -441,27 +441,102 @@ class HomeView(MethodView):
                         project_id = request.form.get('project_id', None)
                         sample_size = int(request.form.get('sample_size', None))
                         df = pd.read_excel(file, sheet_name=0)
+                        
+                        invalid_rows = []
+                        valid_records = []
+                        
+                        # 第一遍：验证所有数据
                         for index, row in df.iterrows():
                             samples_list = []
-                            for i in range(1, sample_size + 1):
-                                column_name = f'n{i}'
-                                if column_name in df.columns:
-                                    samples_list.append(str(row[column_name]))
-                            samples_str = ",".join(samples_list)
-                            new_item = Data(project_id = project_id, samples = samples_str)
+                            row_error = None
+                            
+                            try:
+                                for i in range(1, sample_size + 1):
+                                    column_name = f'n{i}'
+                                    if column_name in df.columns:
+                                        value = row[column_name]
+                                        # 检查是否为空值
+                                        if pd.isna(value):
+                                            row_error = f"第{i}个值为空"
+                                            break
+                                        samples_list.append(str(value))
+                                    else:
+                                        row_error = f"缺少列 n{i}"
+                                        break
+                                
+                                if not row_error:
+                                    # 验证样本数量
+                                    if len(samples_list) != sample_size:
+                                        row_error = f"样本数量不匹配：期望{sample_size}个，实际{len(samples_list)}个"
+                            except Exception as e:
+                                row_error = str(e)
+                            
+                            if row_error:
+                                invalid_rows.append({
+                                    'row': index + 2,  # Excel行号（从1开始+表头）
+                                    'error': row_error
+                                })
+                            else:
+                                valid_records.append({
+                                    'index': index,
+                                    'samples_list': samples_list
+                                })
+                        
+                        # 如果有无效数据，拒绝整个批量操作
+                        if invalid_rows:
+                            # 构建清晰的错误消息
+                            error_details = [f"第{r['row']}行: {r['error']}" for r in invalid_rows[:5]]
+                            error_msg = f"数据验证失败！共{len(invalid_rows)}行数据不符合要求。"
+                            
+                            if len(invalid_rows) <= 5:
+                                error_msg += "\n错误详情：\n" + "\n".join(error_details)
+                            else:
+                                error_msg += "\n前5个错误：\n" + "\n".join(error_details)
+                                error_msg += f"\n... 还有{len(invalid_rows)-5}行错误未显示"
+                            
+                            return jsonify({
+                                'code': 400,
+                                'data': {
+                                    'message': error_msg,
+                                    'error': error_msg,
+                                    'invalid_rows': invalid_rows,
+                                    'required_sample_size': sample_size,
+                                    'invalid_count': len(invalid_rows)
+                                }
+                            })
+                        
+                        # 第二遍：创建数据记录
+                        for record in valid_records:
+                            samples_str = ",".join(record['samples_list'])
+                            new_item = Data(project_id=project_id, samples=samples_str)
                             dbsession.add(new_item)
+                        
                         dbsession.commit()
                         return jsonify({
                             'code': 200,
                             'data': {
-                                'message': 'File uploaded and processed successfully! 文件上传并且处理成功！'
+                                'message': f'File uploaded and processed successfully! 文件上传并且处理成功！共导入 {len(valid_records)} 条数据。',
+                                'valid_count': len(valid_records)
+                            }
+                        })
+                    except ValueError as e:
+                        dbsession.rollback()
+                        error_msg = f'数据格式错误: {str(e)}'
+                        return jsonify({
+                            'code': 400,
+                            'data': {
+                                'message': error_msg,
+                                'error': error_msg
                             }
                         })
                     except Exception as e:
+                        dbsession.rollback()
+                        error_msg = f'处理文件时发生错误: {str(e)}'
                         return jsonify({
                             'code': 500,
                             'data': {
-                                'error': str(e)
+                                'message': error_msg,
+                                'error': error_msg
                             }
                         })
                 else:
@@ -478,9 +553,45 @@ class HomeView(MethodView):
                 if data_type == 'single':
                     project_id = data.get('project_id', None)
                     project = dbsession.query(Project).filter_by(id=project_id).first()
-                    values = [data.get(f"n{i}") for i in range(1, project.sampleSize + 1)]
-                    values_str = ','.join(str(value) for value in values)
-                    data = Data(project_id = project_id, samples = values_str)
+                    
+                    if not project:
+                        error_msg = '项目不存在！Project not found!'
+                        return jsonify({
+                            'code': 404,
+                            'data': {
+                                'message': error_msg,
+                                'error': error_msg
+                            }
+                        })
+
+                    values = []
+                    for i in range(1, project.sampleSize + 1):
+                        value = data.get(f"n{i}")
+                        # 验证每个值
+                        if value is None or (isinstance(value, str) and not value.strip()):
+                            error_msg = f'数据验证失败：第{i}个值(n{i})不能为空！'
+                            return jsonify({
+                                'code': 400,
+                                'data': {
+                                    'message': error_msg,
+                                    'error': error_msg
+                                }
+                            })
+                        try:
+                            float_value = float(value)
+                            values.append(str(float_value))
+                        except (ValueError, TypeError):
+                            error_msg = f'数据验证失败：第{i}个值(n{i})="{value}" 不是有效数字！'
+                            return jsonify({
+                                'code': 400,
+                                'data': {
+                                    'message': error_msg,
+                                    'error': error_msg
+                                }
+                            })
+                    
+                    values_str = ','.join(values)
+                    data = Data(project_id=project_id, samples=values_str)
                     dbsession.add(data)
                     dbsession.commit()
                     add_info = {
@@ -495,11 +606,24 @@ class HomeView(MethodView):
                         'code': 400,
                         'error': 'Unsupported data type for JSON request! JSON数据中文件类型错误!'
                     })
-            except ValueError:
+            except ValueError as e:
+                dbsession.rollback()
+                error_msg = f'数据验证失败: {str(e)}'
                 return jsonify({
                     'code': 400,
                     'data': {
-                        'error': 'Invalid JSON data! 无效的JSON数据!'
+                        'message': error_msg,
+                        'error': error_msg
+                    }
+                })
+            except Exception as e:
+                dbsession.rollback()
+                error_msg = f'添加数据时发生错误: {str(e)}'
+                return jsonify({
+                    'code': 500,
+                    'data': {
+                        'message': error_msg,
+                        'error': error_msg
                     }
                 })
         else:
@@ -515,13 +639,59 @@ class HomeView(MethodView):
         res = request.json
         data_id = res.get('id', None)
         project_id = res.get('project_id', None)
-        project = dbsession.query(Project).filter_by(id=project_id).first()
-        values = [res.get(f"n{i}") for i in range(1, project.sampleSize + 1)]
-        values_str = ','.join(str(value) for value in values)
+        
         data = dbsession.query(Data).get(data_id)
         if data is None:
-            return jsonify({'code': 404, 'data': {'message': "该数据不存在! Data not exsist!"}})
-        else:
+            error_msg = "该数据不存在! Data not exsist!"
+            return jsonify({
+                'code': 404,
+                'data': {
+                    'message': error_msg,
+                    'error': error_msg
+                }
+            })
+
+        project = dbsession.query(Project).filter_by(id=project_id).first()
+        if not project:
+            error_msg = "项目不存在! Project not found!"
+            return jsonify({
+                'code': 404,
+                'data': {
+                    'message': error_msg,
+                    'error': error_msg
+                }
+            })
+
+        # 验证每个值
+        values = []
+        for i in range(1, project.sampleSize + 1):
+            value = res.get(f"n{i}")
+            # 验证每个值
+            if value is None or (isinstance(value, str) and not value.strip()):
+                error_msg = f'数据验证失败：第{i}个值(n{i})不能为空！'
+                return jsonify({
+                    'code': 400,
+                    'data': {
+                        'message': error_msg,
+                        'error': error_msg
+                    }
+                })
+            try:
+                float_value = float(value)
+                values.append(str(float_value))
+            except (ValueError, TypeError):
+                error_msg = f'数据验证失败：第{i}个值(n{i})="{value}" 不是有效数字！'
+                return jsonify({
+                    'code': 400,
+                    'data': {
+                        'message': error_msg,
+                        'error': error_msg
+                    }
+                })
+        
+        values_str = ','.join(values)
+        
+        try:
             data.project_id = project_id
             data.samples = values_str
             dbsession.commit()
@@ -532,6 +702,26 @@ class HomeView(MethodView):
                 }
             }
             return jsonify(upd_info)
+        except ValueError as e:
+            dbsession.rollback()
+            error_msg = f'数据验证失败: {str(e)}'
+            return jsonify({
+                'code': 400,
+                'data': {
+                    'message': error_msg,
+                    'error': error_msg
+                }
+            })
+        except Exception as e:
+            dbsession.rollback()
+            error_msg = f'更新数据时发生错误: {str(e)}'
+            return jsonify({
+                'code': 500,
+                'data': {
+                    'message': error_msg,
+                    'error': error_msg
+                }
+            })
     @verify_token
     def delete(self, userid):
         dbsession = request._db_session

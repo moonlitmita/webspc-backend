@@ -59,29 +59,38 @@ Commenting out the line immediately above it.
 # 3.Development Environment Setup
 
 ## 3.1 Clone
+
 git clone https://gitee.com/valleyfo/webspc-backend.git
 
 ## 3.2 Create Virtual Env
+
 conda create -n myenv python=3.11 -y
 
 ## 3.3 Activate Env
+
 conda activate myenv
 
 ## 3.5 Install Packages
+
 pip install -r requirements.txt
 
 ## 3.6 Set Env Variables (PowerShell)
+
 $env:FLASK_APP = "RealProject"
 
 $env:FLASK_ENV = "development" 
 
-# 4. Live Demo
+4. Production Deployment
+
+Contact the author to obtain: WebSPC Deployment Guide, including k3s environment setup (with video) and project deployment documentation.
+
+# 5. Live Demo
 
 URL: https://webspc.top
 
 Username, Password: Contact the author
 
-# 5. Technical Support
+# 6. Technical Support
 
 Author: valleyfo
 

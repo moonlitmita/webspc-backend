@@ -93,11 +93,15 @@ $env:FLASK_ENV = "development"
 ## 2.7 执行以下命令启动程序
 python manage.py
 
-# 3.项目演示地址：https://webspc.top
+# 3.生产环境部署
+
+联系作者获取: WebSPC部署指南，包含k3s环境搭建(含视频)，项目部署文档。
+
+# 4.项目演示地址：https://webspc.top
 
 用户名，密码：联系作者获取
 
-# 4.技术服务：
+# 5.技术服务：
 
 作者：王宇
 

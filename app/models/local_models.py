@@ -16,6 +16,7 @@ class BaseModel(Base_local):
     __abstract__ = True
     add_date = Column(DateTime, nullable=False, default=datetime.now) 
     upd_date = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False) 
+
 class Department(BaseModel):
     __tablename__ = "department"
     id = Column(Integer, primary_key=True)
@@ -31,6 +32,7 @@ class Department(BaseModel):
             "add_date": self.add_date.strftime("%d %b %Y %H:%M:%S"),
             "upd_date": self.upd_date.strftime("%d %b %Y %H:%M:%S")
         }
+    
 class User(BaseModel):
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
@@ -66,6 +68,7 @@ class User(BaseModel):
             'add_date' : self.add_date.strftime("%d %b %Y %H:%M:%S"),
             'upd_date': self.upd_date.strftime("%d %b %Y %H:%M:%S")
         }  
+    
 class Process(BaseModel):
     __tablename__ = "process"
     id = Column(Integer, primary_key=True)
@@ -84,6 +87,7 @@ class Process(BaseModel):
             "add_date": self.add_date.strftime("%d %b %Y %H:%M:%S"),
             "upd_date": self.upd_date.strftime("%d %b %Y %H:%M:%S")
         }
+    
 class Project(BaseModel):
     __tablename__ = "project"
     id = Column(Integer, primary_key=True)
@@ -127,13 +131,14 @@ class Project(BaseModel):
             "sampleSize": self.sampleSize,
             "USL": self.USL,
             "LSL": self.LSL,
-            "process": self.process.process,
-            "dep": self.process.department.department,
+            "process": self.process.process if self.process else None,
+            "dep": self.process.department.department if self.process and self.process.department else None,
             "selectedChecks": selected_check_list,
             "dataCollectionType": self.dataCollectionType,
             "add_date": self.add_date.strftime("%d %b %Y %H:%M:%S"),
             "upd_date": self.upd_date.strftime("%d %b %Y %H:%M:%S")
         }
+    
 class Data(BaseModel):
     __tablename__ = "data"
     id = Column(Integer, primary_key=True)

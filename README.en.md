@@ -37,26 +37,26 @@ Task Queue System: Celery
 
 Language: Python
 
-# 1.Instructional Video:
+# 1 Instructional Video:
 
-- [01.WebSPC使用方法介绍](https://www.bilibili.com/video/BV1h1XRYLEUt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [1.1 WebSPC User Guide](https://www.bilibili.com/video/BV1h1XRYLEUt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
-- [02.WebSPC使用方法补充-数据自动采集](https://www.bilibili.com/video/BV1ANQbY9EpH?spm_id_from=333.788.recommend_more_video.1&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [1.2 WebSPC Add-on: Automatic Data Collection](https://www.bilibili.com/video/BV1ANQbY9EpH?spm_id_from=333.788.recommend_more_video.1&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
-- [03.WebSPC使用方法-AI集成](https://www.bilibili.com/video/BV1KK6xB2Ecx/?vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [1.3 WebSPC Usage Method - AI Integration](https://www.bilibili.com/video/BV1KK6xB2Ecx/?vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
-# 2.Project Deployment Video:
+# 2 Project Deployment Video:
 
-- [01.WebSPC项目部署_01](https://www.bilibili.com/video/BV11RQAYWE82/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [2.1 WebSPC Deployment Part 1](https://www.bilibili.com/video/BV11RQAYWE82/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
-- [02.WebSPC项目部署_02](https://www.bilibili.com/video/BV1EmQwYgEJt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
+- [2.2 WebSPC Deployment Part 2](https://www.bilibili.com/video/BV1EmQwYgEJt/?spm_id_from=333.1387.collection.video_card.click&vd_source=690fc386f07d30bd01bc5ca11d98ecf3)
 
 Supplement:
 When building the backend Docker image, switch the code from development to production mode by:
 Uncommenting the last line in manage.py (flask_app.run).
 Commenting out the line immediately above it.
 
-# 3.Development Environment Setup
+# 3 Development Environment Setup
 
 ## 3.1 Clone
 
@@ -70,27 +70,25 @@ conda create -n myenv python=3.11 -y
 
 conda activate myenv
 
-## 3.5 Install Packages
+## 3.4 Install Packages
 
 pip install -r requirements.txt
 
-## 3.6 Set Env Variables (PowerShell)
+## 3.5 Set Env Variables (PowerShell)
 
 $env:FLASK_APP = "RealProject"
 
 $env:FLASK_ENV = "development" 
 
-4. Production Deployment
+# 4. Production Deployment
 
-Contact the author to obtain: WebSPC Deployment Guide, including k3s environment setup (with video) and project deployment documentation.
+For a detailed project deployment guide, contact the author:
 
-# 5. Live Demo
+- [K3S Basic Environment Setup](https://www.bilibili.com/cheese/play/ep2460548)
 
-URL: https://webspc.top
+- WebSPC Project Deployment Detailed Documentation and Deployment Files
 
-Username, Password: Contact the author
-
-# 6. Technical Support
+# 5 Technical Support
 
 Author: valleyfo
 
